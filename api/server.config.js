@@ -60,17 +60,10 @@ const configureFastify = async (fastify, options) => {
     fastify.register(require('@fastify/websocket'))
 
     fastify.register(async function (fastify) {
-      console.log('Registering websocket, get /ws')
-      fastify.get('/ws', { websocket: true }, (connection, req) => {
-        console.log(new Date(), 'Websocket connected')
-        console.log('req id', req.id)
+      fastify.get('/ws', { websocket: true }, (connection, _req) => {
         connection.socket.on('message', (message) => {
-          // message.toString() === 'hi from client'
-          console.log(new Date(), 'message', message.toString())
-
           try {
             const data = JSON.parse(message.toString())
-            console.log('data', data)
 
             if (data.cmd === 'REGISTER') {
               wsConnections[data.playerId] ||= connection
@@ -90,10 +83,6 @@ const configureFastify = async (fastify, options) => {
         connection.socket.on('close', () => {
           console.log('Client disconnected')
         })
-      })
-
-      fastify.get('/not-ws', {}, () => {
-        console.log('NOT WS')
       })
     })
   }

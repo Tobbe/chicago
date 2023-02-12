@@ -33,10 +33,64 @@ const config = {
  * Note: This configuration does not apply in a serverless deploy.
  */
 
+const wsConnections = {}
+const gamePlayers = {}
+
+function broadcast(gameId, data) {
+  console.log('broadcast to', gameId, JSON.stringify(data))
+  console.log('players', gamePlayers[gameId])
+  if (gamePlayers[gameId]) {
+    gamePlayers[gameId].forEach((playerId) => {
+      console.log('sending to', playerId, JSON.stringify(data))
+      wsConnections[playerId].socket.send(JSON.stringify(data))
+    })
+  }
+}
+
 /** @type {import('@redwoodjs/api-server/dist/fastify').FastifySideConfigFn} */
 const configureFastify = async (fastify, options) => {
   if (options.side === 'api') {
     fastify.log.info({ custom: { options } }, 'Configuring api side')
+
+    fastify.register(require('@fastify/websocket'))
+
+    fastify.register(async function (fastify) {
+      console.log('Registering websocket, get /ws')
+      fastify.get('/ws', { websocket: true }, (connection, req) => {
+        console.log(new Date(), 'Websocket connected')
+        console.log('req id', req.id)
+        connection.socket.on('message', (message) => {
+          // message.toString() === 'hi from client'
+          console.log(new Date(), 'message', message.toString())
+
+          try {
+            const data = JSON.parse(message.toString())
+            console.log('data', data)
+
+            if (data.cmd === 'REGISTER') {
+              wsConnections[data.playerId] ||= connection
+              const game = gamePlayers[data.gameId]
+              if (game) {
+                game.add(data.playerId)
+              } else {
+                gamePlayers[data.gameId] = new Set([data.playerId])
+              }
+            }
+          } catch {
+            // ignore malformed data
+          }
+        })
+
+        // Client disconnect
+        connection.socket.on('close', () => {
+          console.log('Client disconnected')
+        })
+      })
+
+      fastify.get('/not-ws', {}, () => {
+        console.log('NOT WS')
+      })
+    })
   }
 
   if (options.side === 'web') {
@@ -49,4 +103,5 @@ const configureFastify = async (fastify, options) => {
 module.exports = {
   config,
   configureFastify,
+  broadcast,
 }

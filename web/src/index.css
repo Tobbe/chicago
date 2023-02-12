@@ -1,0 +1,12 @@
+label {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+button {
+  margin-top: 0.5rem;
+}
+
+.card {
+  background: url('../public/cards.png');
+}

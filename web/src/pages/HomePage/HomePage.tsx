@@ -56,6 +56,18 @@ async function deal(gameId: string, playerId: string) {
   }).then((res) => res.json())
 }
 
+async function discard(
+  gameId: string,
+  playerId: string,
+  card: { suite: string; value: number }
+) {
+  console.log('deal to player', playerId)
+  return fetch(`/.redwood/functions/game/${gameId}/${playerId}/hand`, {
+    method: 'DELETE',
+    body: JSON.stringify({ card }),
+  }).then((res) => res.json())
+}
+
 const HomePage = () => {
   const { register, game } = useWsContext()
   const { trigger: createGame, isMutating: isCreatingGame } = useSWRMutation(
@@ -73,8 +85,12 @@ const HomePage = () => {
   const [gameId, setGameId] = useState('')
   const [createdGameId, setCreatedGameId] = useState('')
   const [name, setName] = useState('')
+  const [playerId, setPlayerId] = useState('')
+
+  const me = game?.players.find((p) => p.id === playerId)
 
   console.log('game', game)
+  console.log('me', me)
 
   return (
     <>
@@ -82,32 +98,86 @@ const HomePage = () => {
 
       {createdGameId && <p>Ask other players to join {createdGameId}</p>}
 
-      {game?.players.map((player, index) => (
-        <div key={player.id}>
-          <h1>{player.name}</h1>
-          <div>
-            {[...player.hand].map((card, index) => (
+      {game?.players.map((player) => {
+        if (player.id === playerId) {
+          return null
+        }
+
+        return (
+          <div key={player.id}>
+            <h1>{player.name}</h1>
+            <div className="cards">
+              {[...player.hand].map((card, index) => (
+                <div key={index}>
+                  {card.played ? (
+                    <div className="card">
+                      <img
+                        src={card.suite[0].toLowerCase() + card.value + '.png'}
+                        alt={card.suite + ' ' + card.value}
+                      />
+                    </div>
+                  ) : card.discarded ? (
+                    <div></div>
+                  ) : (
+                    <div className="card">
+                      <img src="back.png" alt="Hidden card" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {me?.dealer && (
+              <button
+                onClick={() => {
+                  console.log('deal', player.id)
+                  deal(createdGameId || gameId, player.id)
+                }}
+              >
+                Deal
+              </button>
+            )}
+          </div>
+        )
+      })}
+
+      {me && (
+        <div>
+          <h1>{me.name}</h1>
+          <div className="cards">
+            {[...me.hand].map((card, index) => (
               <div key={index}>
-                {card.played ? (
-                  <div key={index} className="card">
-                    {card.suite} {card.value}
-                  </div>
-                ) : (
-                  <div key={index}>Hidden</div>
+                {card.suite !== 'UNKNOWN' && !card.discarded && (
+                  <>
+                    <div key={index} className="card">
+                      <img
+                        src={card.suite[0].toLowerCase() + card.value + '.png'}
+                        alt={card.suite + ' ' + card.value}
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        discard(createdGameId || gameId, playerId, card)
+                      }}
+                    >
+                      Discard
+                    </button>
+                  </>
                 )}
               </div>
             ))}
           </div>
-          <button
-            onClick={() => {
-              console.log('deal', player.id)
-              deal(createdGameId || gameId, player.id)
-            }}
-          >
-            Deal
-          </button>
+          {me.dealer && (
+            <button
+              onClick={() => {
+                console.log('deal', me.id)
+                deal(createdGameId || gameId, me.id)
+              }}
+            >
+              Deal
+            </button>
+          )}
         </div>
-      ))}
+      )}
 
       <div>
         <label htmlFor="name">Your name</label>
@@ -129,6 +199,7 @@ const HomePage = () => {
             console.log('gameId', gameId)
             const playerId = await joinGame({ gameId, name })
             console.log('playerId', playerId)
+            setPlayerId(playerId)
             register(gameId, playerId)
             // TODO: Make `register` async and have it wait for ACK
             await new Promise((resolve) => setTimeout(resolve, 300))
@@ -156,6 +227,7 @@ const HomePage = () => {
         onClick={async () => {
           const playerId = await joinGame({ gameId, name })
           console.log('playerId', playerId)
+          setPlayerId(playerId)
           register(gameId, playerId)
           // TODO: Make `register` async and have it wait for ACK
           await new Promise((resolve) => setTimeout(resolve, 300))

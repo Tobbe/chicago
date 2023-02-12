@@ -7,6 +7,18 @@ button {
   margin-top: 0.5rem;
 }
 
+.cards {
+  display: flex;
+}
+
 .card {
-  background: url('../public/cards.png');
+  /* width: 79px;
+  height: 123px; */
+  width: 60px;
+  height: 93px;
+}
+
+.card img {
+  width: 100%;
+  height: 100%;
 }

@@ -47,6 +47,11 @@ function broadcast(gameId, data) {
   }
 }
 
+function message(gameId, playerId, data) {
+  console.log('message to', gameId, playerId, JSON.stringify(data))
+  wsConnections[playerId].socket.send(JSON.stringify(data))
+}
+
 /** @type {import('@redwoodjs/api-server/dist/fastify').FastifySideConfigFn} */
 const configureFastify = async (fastify, options) => {
   if (options.side === 'api') {
@@ -104,4 +109,5 @@ module.exports = {
   config,
   configureFastify,
   broadcast,
+  message,
 }

@@ -70,6 +70,7 @@ interface Props {
 const WsContextProvider: React.FC<Props> = ({ children }) => {
   // const [isReady, setIsReady] = useState(false)
   const [playerId, setPlayerId] = useState('')
+  const playerIdRef = useRef<string>()
   // const [gameId, setGameId] = useState('')
   const [game, setGame] = useState<Game>()
 
@@ -85,11 +86,34 @@ const WsContextProvider: React.FC<Props> = ({ children }) => {
       const data = JSON.parse(event.data)
       if (data.type === 'PLAYERS') {
         console.log('PLAYERS', data.players)
+
         setGame((game) => {
-          return {
-            ...game,
-            players: data.players,
-          }
+          const me = game?.players.find((p) => p.id === playerIdRef.current)
+
+          const players = data.players.map((player) => {
+            if (player.id === me?.id) {
+              return me
+            }
+
+            return player
+          })
+
+          return { ...game, players }
+        })
+      } else if (data.type === 'UPDATE') {
+        console.log('UPDATE', data.player)
+        setGame((game) => {
+          const players = game.players.map((player) => {
+            if (player.id === data.player.id) {
+              return data.player
+            }
+
+            return player
+          })
+
+          console.log('new game', { ...game, players })
+
+          return { ...game, players }
         })
       }
     }
@@ -104,6 +128,7 @@ const WsContextProvider: React.FC<Props> = ({ children }) => {
   // const ret: WsValue = [isReady, val, ws.current?.send.bind(ws.current)]
   const register = useCallback((gameId: string, playerId: string) => {
     setPlayerId(playerId)
+    playerIdRef.current = playerId
     ws.current?.send(JSON.stringify({ cmd: 'REGISTER', playerId, gameId }))
   }, [])
 

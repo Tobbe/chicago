@@ -49,6 +49,13 @@ async function syncGame(gameId: string) {
   }).then((res) => res.json())
 }
 
+async function deal(gameId: string, playerId: string) {
+  console.log('deal to player', playerId)
+  return fetch(`/.redwood/functions/game/${gameId}/${playerId}/hand`, {
+    method: 'PUT',
+  }).then((res) => res.json())
+}
+
 const HomePage = () => {
   const { register, game } = useWsContext()
   const { trigger: createGame, isMutating: isCreatingGame } = useSWRMutation(
@@ -76,11 +83,11 @@ const HomePage = () => {
       {createdGameId && <p>Ask other players to join {createdGameId}</p>}
 
       {game?.players.map((player, index) => (
-        <div key={index}>
+        <div key={player.id}>
           <h1>{player.name}</h1>
           <div>
             {[...player.hand].map((card, index) => (
-              <>
+              <div key={index}>
                 {card.played ? (
                   <div key={index} className="card">
                     {card.suite} {card.value}
@@ -88,12 +95,13 @@ const HomePage = () => {
                 ) : (
                   <div key={index}>Hidden</div>
                 )}
-              </>
+              </div>
             ))}
           </div>
           <button
             onClick={() => {
-              console.log('deal')
+              console.log('deal', player.id)
+              deal(createdGameId || gameId, player.id)
             }}
           >
             Deal
@@ -122,6 +130,9 @@ const HomePage = () => {
             const playerId = await joinGame({ gameId, name })
             console.log('playerId', playerId)
             register(gameId, playerId)
+            // TODO: Make `register` async and have it wait for ACK
+            await new Promise((resolve) => setTimeout(resolve, 300))
+            await syncGame(gameId)
           }}
           disabled={isCreatingGame}
         >
@@ -146,6 +157,7 @@ const HomePage = () => {
           const playerId = await joinGame({ gameId, name })
           console.log('playerId', playerId)
           register(gameId, playerId)
+          // TODO: Make `register` async and have it wait for ACK
           await new Promise((resolve) => setTimeout(resolve, 300))
           await syncGame(gameId)
         }}

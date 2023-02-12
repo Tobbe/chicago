@@ -218,9 +218,28 @@ export function deal(gameId: string, playerId: string) {
     throw new Error('Deck is empty')
   }
 
-  player.hand.add(card(game.deck))
+  const newCard = card(game.deck)
 
-  if (!game) {
-    throw new Error(`Game not found: ${gameId}`)
-  }
+  player.hand.add(newCard)
+
+  broadcast(gameId, {
+    type: 'PLAYERS',
+    players: game.players.map((p) => {
+      const hand = [...p.hand.values()].map((c) => {
+        if (c.played) {
+          return c
+        } else {
+          // Whoever receives this can't trust suite and value because played is false
+          return { ...c, suite: 'SPADES', value: 0 }
+        }
+      })
+
+      return {
+        ...p,
+        hand,
+      }
+    }),
+  })
+
+  return newCard
 }

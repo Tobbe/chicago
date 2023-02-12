@@ -1,6 +1,6 @@
 import type { APIGatewayEvent, Context } from 'aws-lambda'
 
-import { joinGame, newGame, syncGame } from 'src/lib/game'
+import { deal, joinGame, newGame, syncGame } from 'src/lib/game'
 import { logger } from 'src/lib/logger'
 
 /**
@@ -38,6 +38,18 @@ export const handler = async (event: APIGatewayEvent, _context: Context) => {
     const gameId = event.path.split('/')[2]
     console.log('Sync game', gameId)
     syncGame(gameId)
+  } else if (event.path.split('/').length === 5) {
+    const gameId = event.path.split('/')[2]
+    const playerId = event.path.split('/')[3]
+
+    if (event.path.endsWith('/hand') && event.httpMethod === 'PUT') {
+      console.log('Put card', gameId, playerId, event.body)
+      const card = await deal(gameId, playerId)
+      console.log('Dealt card', card)
+    } else if (event.path.endsWith('/hand') && event.httpMethod === 'DELETE') {
+      console.log('Delete card', gameId, playerId, event.body)
+      // returnData = await deleteCard(gameId, playerId, event.body)
+    }
   }
 
   return {

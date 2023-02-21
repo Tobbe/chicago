@@ -121,9 +121,28 @@ function updatePlayer(gameId: string, playerId: string) {
   })
 }
 
+function uniqueGameId(games: Game[]) {
+  let id: string
+
+  do {
+    id = Math.random()
+      .toString(36)
+      .slice(2, 6)
+      .toUpperCase()
+      // I is sometimes difficult to distinguish from 1, so let's replace it with L
+      .replaceAll('I', 'L')
+      // O is difficult to distinguish from 0, so let's replace it with Q
+      .replaceAll('O', 'Q')
+      // 0 is difficult to distinguish from O, so let's replace it with 8
+      .replaceAll('0', '9')
+  } while (games.find((g) => g.id === id))
+
+  return id
+}
+
 export function newGame() {
   const game: Game = {
-    id: nanoid(),
+    id: uniqueGameId(games),
     players: [],
     deck: shuffledDeck(),
   }

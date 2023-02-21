@@ -12,20 +12,16 @@ interface Card {
 }
 
 interface UnknownCard {
-  suite: Card['suite'] | 'UNKNOWN'
-  value: number
-}
-
-interface PlayerCard extends UnknownCard {
-  played: boolean
-  discarded: boolean
+  suite: 'UNKNOWN'
+  value: 0
 }
 
 interface Player {
   id?: string
   name?: string
   score: number
-  hand: Array<PlayerCard>
+  hand: Array<Card | UnknownCard>
+  played: Array<Card>
   dealer?: boolean
 }
 

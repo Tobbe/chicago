@@ -82,6 +82,7 @@ async function play(
 
 const HomePage = () => {
   const { register, game } = useWsContext()
+
   const { trigger: createGame, isMutating: isCreatingGame } = useSWRMutation(
     '/.redwood/functions/game',
     putRequest /* options */
@@ -100,8 +101,6 @@ const HomePage = () => {
   const [playerId, setPlayerId] = useState('')
 
   const me = game?.players.find((p) => p.id === playerId)
-  const hand = me?.hand.filter((card) => !card.discarded && !card.played) || []
-  const played = me?.hand.filter((card) => card.played) || []
 
   console.log('game', game)
   console.log('me', me)
@@ -117,37 +116,20 @@ const HomePage = () => {
           return null
         }
 
-        const hand =
-          player.hand.filter((card) => !card.discarded && !card.played) || []
-        const played = player.hand.filter((card) => card.played) || []
-
         return (
           <div key={player.id}>
             <h1>{player.name}</h1>
             <p>Hand</p>
             <div className="cards">
-              {hand.map((card, index) => (
-                <div key={index}>
-                  {card.played ? (
-                    <div className="card">
-                      <img
-                        src={card.suite[0].toLowerCase() + card.value + '.png'}
-                        alt={card.suite + ' ' + card.value}
-                      />
-                    </div>
-                  ) : card.discarded ? (
-                    <div></div>
-                  ) : (
-                    <div className="card">
-                      <img src="back.png" alt="Hidden card" />
-                    </div>
-                  )}
+              {player.hand.map((_card, index) => (
+                <div key={index} className="card">
+                  <img src="back.png" alt="Hidden card" />
                 </div>
               ))}
             </div>
             <p>Played</p>
             <div className="cards cards-played">
-              {played.map((card, index) => (
+              {player.played.map((card, index) => (
                 <div key={index} className="card">
                   <img
                     src={card.suite[0].toLowerCase() + card.value + '.png'}
@@ -175,7 +157,7 @@ const HomePage = () => {
           <h1>{me.name}</h1>
           <p>Played</p>
           <div className="cards cards-played">
-            {played.map((card, index) => (
+            {me.played.map((card, index) => (
               <div key={index} className="card">
                 <img
                   src={card.suite[0].toLowerCase() + card.value + '.png'}
@@ -186,32 +168,28 @@ const HomePage = () => {
           </div>
           <p>Hand</p>
           <div className="cards">
-            {hand.map((card, index) => (
+            {me.hand.map((card, index) => (
               <div key={index}>
-                {card.suite !== 'UNKNOWN' && !card.discarded && (
-                  <>
-                    <div key={index} className="card">
-                      <img
-                        src={card.suite[0].toLowerCase() + card.value + '.png'}
-                        alt={card.suite + ' ' + card.value}
-                      />
-                    </div>
-                    <button
-                      onClick={() => {
-                        discard(createdGameId || gameId, playerId, card)
-                      }}
-                    >
-                      Discard
-                    </button>
-                    <button
-                      onClick={() => {
-                        play(createdGameId || gameId, playerId, card)
-                      }}
-                    >
-                      Play
-                    </button>
-                  </>
-                )}
+                <div key={index} className="card">
+                  <img
+                    src={card.suite[0].toLowerCase() + card.value + '.png'}
+                    alt={card.suite + ' ' + card.value}
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    discard(createdGameId || gameId, playerId, card)
+                  }}
+                >
+                  Discard
+                </button>
+                <button
+                  onClick={() => {
+                    play(createdGameId || gameId, playerId, card)
+                  }}
+                >
+                  Play
+                </button>
               </div>
             ))}
           </div>

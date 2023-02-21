@@ -2,16 +2,17 @@ import nanoid from 'nanoid'
 
 import { broadcast, message } from '../../server.config'
 
-interface PlayerCard extends Card {
-  played: boolean
-  discarded: boolean
+interface UnknownCard {
+  suite: 'UNKNOWN'
+  value: 0
 }
 
 interface Player {
   id?: string
   name?: string
   score: number
-  hand: Array<PlayerCard>
+  hand: Array<Card | UnknownCard>
+  played: Array<Card>
   dealer?: boolean
 }
 
@@ -96,10 +97,6 @@ function shuffledDeck() {
   return shuffledDeck
 }
 
-function card(deck: Array<Card>) {
-  return { ...deck.pop(), played: false, discarded: false }
-}
-
 function updatePlayer(gameId: string, playerId: string) {
   const game = games.find((game) => game.id === gameId)
 
@@ -168,23 +165,19 @@ export function joinGame(gameId: string, name: string) {
     name,
     score: 0,
     hand: [],
+    played: [],
     dealer: game.players.length === 0 ? true : false,
   })
 
   broadcast(gameId, {
     type: 'PLAYERS',
-    players: game.players.map((p) => {
-      const hand = p.hand.map((c) => {
-        if (c.played) {
-          return c
-        } else {
-          // Whoever receives this can't trust suite and value because played is false
-          return { ...c, suite: 'UNKNOWN', value: 0 }
-        }
+    players: game.players.map((player) => {
+      const hand = player.hand.map(() => {
+        return { suite: 'UNKNOWN', value: 0 }
       })
 
       return {
-        ...p,
+        ...player,
         hand,
       }
     }),
@@ -202,18 +195,13 @@ export function syncGame(gameId: string) {
 
   broadcast(gameId, {
     type: 'PLAYERS',
-    players: game.players.map((p) => {
-      const hand = p.hand.map((c) => {
-        if (c.played) {
-          return c
-        } else {
-          // Whoever receives this can't trust suite and value because played is false
-          return { ...c, suite: 'UNKNOWN', value: 0 }
-        }
+    players: game.players.map((player) => {
+      const hand = player.hand.map(() => {
+        return { suite: 'UNKNOWN', value: 0 }
       })
 
       return {
-        ...p,
+        ...player,
         hand,
       }
     }),
@@ -233,28 +221,19 @@ export function discardCard(gameId: string, playerId: string, card: Card) {
     throw new Error('Can not find player ' + playerId)
   }
 
-  const playerCard = player.hand.find(
-    (pC) => pC.suite === card.suite && pC.value === card.value
+  player.hand = player.hand.filter(
+    (c) => c.suite !== card.suite || c.value !== card.value
   )
-
-  if (playerCard) {
-    playerCard.discarded = true
-  }
 
   broadcast(gameId, {
     type: 'PLAYERS',
-    players: game.players.map((p) => {
-      const hand = p.hand.map((c) => {
-        if (c.played) {
-          return c
-        } else {
-          // Whoever receives this can't trust suite and value because played is false
-          return { ...c, suite: 'UNKNOWN', value: 0 }
-        }
+    players: game.players.map((player) => {
+      const hand = player.hand.map(() => {
+        return { suite: 'UNKNOWN', value: 0 }
       })
 
       return {
-        ...p,
+        ...player,
         hand,
       }
     }),
@@ -275,28 +254,28 @@ export function playCard(gameId: string, playerId: string, card: Card) {
     throw new Error('Can not find player ' + playerId)
   }
 
-  const playerCard = player.hand.find(
-    (pC) => pC.suite === card.suite && pC.value === card.value
+  console.log('play card', card)
+
+  const hand = player.hand.filter(
+    (c) => c.suite !== card.suite || c.value !== card.value
   )
 
-  if (playerCard) {
-    playerCard.played = true
+  console.log('hand after playing', hand)
+
+  if (hand.length === player.hand.length - 1) {
+    player.hand = hand
+    player.played.push(card)
   }
 
   broadcast(gameId, {
     type: 'PLAYERS',
-    players: game.players.map((p) => {
-      const hand = p.hand.map((c) => {
-        if (c.played) {
-          return c
-        } else {
-          // Whoever receives this can't trust suite and value because played is false
-          return { ...c, suite: 'UNKNOWN', value: 0 }
-        }
+    players: game.players.map((player) => {
+      const hand = player.hand.map(() => {
+        return { suite: 'UNKNOWN', value: 0 }
       })
 
       return {
-        ...p,
+        ...player,
         hand,
       }
     }),
@@ -320,24 +299,19 @@ export function deal(gameId: string, playerId: string) {
     throw new Error('Deck is empty')
   }
 
-  const newCard = card(game.deck)
+  const newCard = game.deck.pop()
 
   player.hand.push(newCard)
 
   broadcast(gameId, {
     type: 'PLAYERS',
-    players: game.players.map((p) => {
-      const hand = p.hand.map((c) => {
-        if (c.played) {
-          return c
-        } else {
-          // Whoever receives this can't trust suite and value because played is false
-          return { ...c, suite: 'UNKNOWN', value: 0 }
-        }
+    players: game.players.map((player) => {
+      const hand = player.hand.map(() => {
+        return { suite: 'UNKNOWN', value: 0 }
       })
 
       return {
-        ...p,
+        ...player,
         hand,
       }
     }),

@@ -25,7 +25,7 @@ interface Player {
   id?: string
   name?: string
   score: number
-  hand: Set<PlayerCard>
+  hand: Array<PlayerCard>
   dealer?: boolean
 }
 

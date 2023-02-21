@@ -61,9 +61,21 @@ async function discard(
   playerId: string,
   card: { suite: string; value: number }
 ) {
-  console.log('deal to player', playerId)
+  console.log('player', playerId, 'discards card', card)
   return fetch(`/.redwood/functions/game/${gameId}/${playerId}/hand`, {
     method: 'DELETE',
+    body: JSON.stringify({ card }),
+  }).then((res) => res.json())
+}
+
+async function play(
+  gameId: string,
+  playerId: string,
+  card: { suite: string; value: number }
+) {
+  console.log('player', playerId, 'plays card', card)
+  return fetch(`/.redwood/functions/game/${gameId}/${playerId}/hand`, {
+    method: 'POST',
     body: JSON.stringify({ card }),
   }).then((res) => res.json())
 }
@@ -88,6 +100,8 @@ const HomePage = () => {
   const [playerId, setPlayerId] = useState('')
 
   const me = game?.players.find((p) => p.id === playerId)
+  const hand = me?.hand.filter((card) => !card.discarded && !card.played) || []
+  const played = me?.hand.filter((card) => card.played) || []
 
   console.log('game', game)
   console.log('me', me)
@@ -103,11 +117,16 @@ const HomePage = () => {
           return null
         }
 
+        const hand =
+          player.hand.filter((card) => !card.discarded && !card.played) || []
+        const played = player.hand.filter((card) => card.played) || []
+
         return (
           <div key={player.id}>
             <h1>{player.name}</h1>
+            <p>Hand</p>
             <div className="cards">
-              {[...player.hand].map((card, index) => (
+              {hand.map((card, index) => (
                 <div key={index}>
                   {card.played ? (
                     <div className="card">
@@ -123,6 +142,17 @@ const HomePage = () => {
                       <img src="back.png" alt="Hidden card" />
                     </div>
                   )}
+                </div>
+              ))}
+            </div>
+            <p>Played</p>
+            <div className="cards cards-played">
+              {played.map((card, index) => (
+                <div key={index} className="card">
+                  <img
+                    src={card.suite[0].toLowerCase() + card.value + '.png'}
+                    alt={card.suite + ' ' + card.value}
+                  />
                 </div>
               ))}
             </div>
@@ -143,8 +173,20 @@ const HomePage = () => {
       {me && (
         <div>
           <h1>{me.name}</h1>
+          <p>Played</p>
+          <div className="cards cards-played">
+            {played.map((card, index) => (
+              <div key={index} className="card">
+                <img
+                  src={card.suite[0].toLowerCase() + card.value + '.png'}
+                  alt={card.suite + ' ' + card.value}
+                />
+              </div>
+            ))}
+          </div>
+          <p>Hand</p>
           <div className="cards">
-            {[...me.hand].map((card, index) => (
+            {hand.map((card, index) => (
               <div key={index}>
                 {card.suite !== 'UNKNOWN' && !card.discarded && (
                   <>
@@ -160,6 +202,13 @@ const HomePage = () => {
                       }}
                     >
                       Discard
+                    </button>
+                    <button
+                      onClick={() => {
+                        play(createdGameId || gameId, playerId, card)
+                      }}
+                    >
+                      Play
                     </button>
                   </>
                 )}

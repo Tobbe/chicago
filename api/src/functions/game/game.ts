@@ -1,6 +1,13 @@
 import type { APIGatewayEvent, Context } from 'aws-lambda'
 
-import { deal, discardCard, joinGame, newGame, syncGame } from 'src/lib/game'
+import {
+  deal,
+  discardCard,
+  joinGame,
+  newGame,
+  playCard,
+  syncGame,
+} from 'src/lib/game'
 import { logger } from 'src/lib/logger'
 
 /**
@@ -51,6 +58,11 @@ export const handler = async (event: APIGatewayEvent, _context: Context) => {
       const body = JSON.parse(event.body)
       const card = await discardCard(gameId, playerId, body.card)
       console.log('Discarded card', card)
+    } else if (event.path.endsWith('/hand') && event.httpMethod === 'POST') {
+      console.log('Play card', gameId, playerId, event.body)
+      const body = JSON.parse(event.body)
+      const card = await playCard(gameId, playerId, body.card)
+      console.log('Played card', card)
     }
   }
 

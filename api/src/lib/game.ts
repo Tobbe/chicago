@@ -243,6 +243,48 @@ export function discardCard(gameId: string, playerId: string, card: Card) {
   updatePlayer(gameId, playerId)
 }
 
+export function playCard(gameId: string, playerId: string, card: Card) {
+  const game = games.find((game) => game.id === gameId)
+
+  if (!game) {
+    throw new Error('Can not find game ' + gameId)
+  }
+
+  const player = game.players.find((player) => player.id === playerId)
+
+  if (!player) {
+    throw new Error('Can not find player ' + playerId)
+  }
+
+  const playerCard = player.hand.find(
+    (pC) => pC.suite === card.suite && pC.value === card.value
+  )
+
+  if (playerCard) {
+    playerCard.played = true
+  }
+
+  broadcast(gameId, {
+    type: 'PLAYERS',
+    players: game.players.map((p) => {
+      const hand = p.hand.map((c) => {
+        if (c.played) {
+          return c
+        } else {
+          // Whoever receives this can't trust suite and value because played is false
+          return { ...c, suite: 'UNKNOWN', value: 0 }
+        }
+      })
+
+      return {
+        ...p,
+        hand,
+      }
+    }),
+  })
+  updatePlayer(gameId, playerId)
+}
+
 export function deal(gameId: string, playerId: string) {
   const game = games.find((game) => game.id === gameId)
 

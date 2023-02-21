@@ -22,7 +22,7 @@ p {
 }
 
 .cards-played .card {
-  margin-left: -35px;
+  margin-left: -38px;
 }
 
 .cards-played .card:first-of-type {
@@ -34,6 +34,11 @@ p {
   height: 123px; */
   width: 60px;
   height: 93px;
+  margin-left: 3px;
+}
+
+.card:first-of-type {
+  margin-left: 0;
 }
 
 .card img {

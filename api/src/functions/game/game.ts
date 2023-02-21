@@ -7,6 +7,7 @@ import {
   newGame,
   playCard,
   syncGame,
+  nextRound,
 } from 'src/lib/game'
 import { logger } from 'src/lib/logger'
 
@@ -45,20 +46,32 @@ export const handler = async (event: APIGatewayEvent, _context: Context) => {
     const gameId = event.path.split('/')[2]
     console.log('Sync game', gameId)
     syncGame(gameId)
-  } else if (event.path.split('/').length === 5) {
+  } else if (
+    event.path.split('/').length === 4 &&
+    event.path.endsWith('/round')
+  ) {
+    const gameId = event.path.split('/')[2]
+    const body = JSON.parse(event.body)
+    const playerId = body.playerId
+
+    nextRound(gameId, playerId)
+  } else if (
+    event.path.split('/').length === 5 &&
+    event.path.endsWith('/hand')
+  ) {
     const gameId = event.path.split('/')[2]
     const playerId = event.path.split('/')[3]
 
-    if (event.path.endsWith('/hand') && event.httpMethod === 'PUT') {
+    if (event.httpMethod === 'PUT') {
       console.log('Put card', gameId, playerId, event.body)
       const card = await deal(gameId, playerId)
       console.log('Dealt card', card)
-    } else if (event.path.endsWith('/hand') && event.httpMethod === 'DELETE') {
+    } else if (event.httpMethod === 'DELETE') {
       console.log('Delete card', gameId, playerId, event.body)
       const body = JSON.parse(event.body)
       const card = await discardCard(gameId, playerId, body.card)
       console.log('Discarded card', card)
-    } else if (event.path.endsWith('/hand') && event.httpMethod === 'POST') {
+    } else if (event.httpMethod === 'POST') {
       console.log('Play card', gameId, playerId, event.body)
       const body = JSON.parse(event.body)
       const card = await playCard(gameId, playerId, body.card)

@@ -56,6 +56,14 @@ async function deal(gameId: string, playerId: string) {
   }).then((res) => res.json())
 }
 
+async function nextRound(gameId: string, playerId: string) {
+  console.log('next round', playerId)
+  return fetch(`/.redwood/functions/game/${gameId}/round`, {
+    method: 'PUT',
+    body: JSON.stringify({ playerId }),
+  }).then((res) => res.json())
+}
+
 async function discard(
   gameId: string,
   playerId: string,
@@ -194,14 +202,22 @@ const HomePage = () => {
             ))}
           </div>
           {me.dealer && (
-            <button
-              onClick={() => {
-                console.log('deal', me.id)
-                deal(createdGameId || gameId, me.id)
-              }}
-            >
-              Deal
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  deal(createdGameId || gameId, me.id)
+                }}
+              >
+                Deal
+              </button>
+              <button
+                onClick={() => {
+                  nextRound(createdGameId || gameId, me.id)
+                }}
+              >
+                Next round
+              </button>
+            </>
           )}
         </div>
       )}

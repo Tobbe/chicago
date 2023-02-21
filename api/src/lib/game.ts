@@ -289,6 +289,7 @@ export function deal(gameId: string, playerId: string) {
   if (!game) {
     throw new Error('Can not find game ' + gameId)
   }
+
   const player = game.players.find((player) => player.id === playerId)
 
   if (!player) {
@@ -319,4 +320,53 @@ export function deal(gameId: string, playerId: string) {
   updatePlayer(gameId, playerId)
 
   return newCard
+}
+
+export function nextRound(gameId: string, playerId: string) {
+  const game = games.find((game) => game.id === gameId)
+
+  if (!game) {
+    throw new Error('Can not find game ' + gameId)
+  }
+
+  const player = game.players.find((player) => player.id === playerId)
+
+  if (!player) {
+    throw new Error('Can not find player ' + playerId)
+  }
+
+  let currentDealerIndex = 0
+  game.players.forEach((player, index) => {
+    player.hand = []
+    player.played = []
+
+    if (player.dealer) {
+      player.dealer = false
+      currentDealerIndex = index
+    }
+  })
+
+  if (currentDealerIndex === game.players.length - 1) {
+    game.players[0].dealer = true
+  } else {
+    game.players[currentDealerIndex + 1].dealer = true
+  }
+
+  broadcast(gameId, {
+    type: 'PLAYERS',
+    players: game.players.map((player) => {
+      const hand = player.hand.map(() => {
+        return { suite: 'UNKNOWN', value: 0 }
+      })
+
+      return {
+        ...player,
+        hand,
+      }
+    }),
+  })
+
+  game.players.forEach((player) => {
+    updatePlayer(gameId, player.id)
+  })
 }

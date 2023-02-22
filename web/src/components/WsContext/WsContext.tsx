@@ -77,8 +77,12 @@ const WsContextProvider: React.FC<Props> = ({ children }) => {
       'wss://chicago.tobbe.dev/.redwood/functions/ws'
     )
 
-    // socket.onopen = () => setIsReady(true)
-    // socket.onclose = () => setIsReady(false)
+    socket.onopen = (d) => {
+      console.log('socket open', d)
+    }
+    socket.onclose = (e) => {
+      console.log('socket close', e)
+    }
     socket.onmessage = (event) => {
       console.log('onmessage', event.data)
       const data = JSON.parse(event.data)

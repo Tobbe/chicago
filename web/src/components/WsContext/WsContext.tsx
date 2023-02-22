@@ -88,7 +88,10 @@ const WsContextProvider: React.FC<Props> = ({ children }) => {
 
           const players = data.players.map((player) => {
             if (player.id === me?.id) {
-              return me
+              return {
+                ...player,
+                hand: me.hand,
+              }
             }
 
             return player

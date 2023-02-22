@@ -13,6 +13,27 @@ p {
   margin-bottom: 0.2rem;
 }
 
+header {
+  display: flex;
+  align-items: center;
+  margin-top: .6em;
+  margin-bottom: .2em;
+}
+
+header h1 {
+  display: inline;
+  margin: 0;
+}
+
+header label {
+  display: inline;
+  padding-left: 1em;
+}
+
+header input {
+  margin-left: .2em;
+}
+
 .cards {
   display: flex;
 }

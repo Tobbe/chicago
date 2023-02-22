@@ -8,6 +8,7 @@ import {
   playCard,
   syncGame,
   nextRound,
+  score,
 } from 'src/lib/game'
 import { logger } from 'src/lib/logger'
 
@@ -76,6 +77,17 @@ export const handler = async (event: APIGatewayEvent, _context: Context) => {
       const body = JSON.parse(event.body)
       const card = await playCard(gameId, playerId, body.card)
       console.log('Played card', card)
+    }
+  } else if (
+    event.path.split('/').length === 5 &&
+    event.path.split('/')[3] === 'player'
+  ) {
+    const gameId = event.path.split('/')[2]
+    const playerId = event.path.split('/')[4]
+    const body = JSON.parse(event.body)
+
+    if (typeof body.score !== 'undefined') {
+      await score(gameId, playerId, body.score)
     }
   }
 

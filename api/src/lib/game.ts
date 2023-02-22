@@ -370,3 +370,36 @@ export function nextRound(gameId: string, playerId: string) {
     updatePlayer(gameId, player.id)
   })
 }
+
+export function score(gameId: string, playerId: string, score: number) {
+  const game = games.find((game) => game.id === gameId)
+
+  if (!game) {
+    throw new Error('Can not find game ' + gameId)
+  }
+
+  const player = game.players.find((player) => player.id === playerId)
+
+  if (!player) {
+    throw new Error('Can not find player ' + playerId)
+  }
+
+  player.score = score
+
+  broadcast(gameId, {
+    type: 'PLAYERS',
+    players: game.players.map((player) => {
+      const hand = player.hand.map(() => {
+        return { suite: 'UNKNOWN', value: 0 }
+      })
+
+      return {
+        ...player,
+        hand,
+      }
+    }),
+  })
+  // updatePlayer(gameId, playerId)
+
+  return score
+}

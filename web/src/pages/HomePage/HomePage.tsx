@@ -70,6 +70,8 @@ async function discard(
   card: { suite: string; value: number }
 ) {
   console.log('player', playerId, 'discards card', card)
+  // TODO: This and others like it should be
+  // /game/{id}/player/{id}/hand
   return fetch(`/.redwood/functions/game/${gameId}/${playerId}/hand`, {
     method: 'DELETE',
     body: JSON.stringify({ card }),
@@ -85,6 +87,14 @@ async function play(
   return fetch(`/.redwood/functions/game/${gameId}/${playerId}/hand`, {
     method: 'POST',
     body: JSON.stringify({ card }),
+  }).then((res) => res.json())
+}
+
+async function score(gameId: string, playerId: string, score: number) {
+  console.log('set player score', playerId, score)
+  return fetch(`/.redwood/functions/game/${gameId}/player/${playerId}`, {
+    method: 'POST',
+    body: JSON.stringify({ score }),
   }).then((res) => res.json())
 }
 
@@ -126,7 +136,24 @@ const HomePage = () => {
 
         return (
           <div key={player.id}>
-            <h1>{player.name}</h1>
+            <header>
+              <h1>{player.name}</h1>
+              <label>
+                Score:
+                <input
+                  type="text"
+                  onChange={(e) => {
+                    console.log('new score', e.target.value)
+                    // Write to me.score to quickly update the value shown in
+                    // the input. This will then be overwritten when the game
+                    // is updated by the websocket
+                    player.score = parseInt(e.target.value || '0', 10)
+                    score(createdGameId || gameId, player.id, player.score)
+                  }}
+                  value={player.score}
+                />
+              </label>
+            </header>
             <p>Hand</p>
             <div className="cards">
               {player.hand.map((_card, index) => (
@@ -162,7 +189,24 @@ const HomePage = () => {
 
       {me && (
         <div>
-          <h1>{me.name}</h1>
+          <header>
+            <h1>{me.name}</h1>
+            <label>
+              Score:
+              <input
+                type="text"
+                onChange={(e) => {
+                  console.log('new score', e.target.value)
+                  // Write to me.score to quickly update the value shown in the
+                  // input. This will then be overwritten when the game is
+                  // updated by the websocket
+                  me.score = parseInt(e.target.value || '0', 10)
+                  score(createdGameId || gameId, me.id, me.score)
+                }}
+                value={me.score}
+              />
+            </label>
+          </header>
           <p>Played</p>
           <div className="cards cards-played">
             {me.played.map((card, index) => (

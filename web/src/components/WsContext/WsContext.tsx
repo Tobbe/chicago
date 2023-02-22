@@ -73,7 +73,9 @@ const WsContextProvider: React.FC<Props> = ({ children }) => {
   const ws = useRef<WebSocket>()
 
   useEffect(() => {
-    const socket = new WebSocket('ws://localhost:8911/ws')
+    const socket = new WebSocket(
+      'wss://chicago.tobbe.dev/.redwood/functions/ws'
+    )
 
     // socket.onopen = () => setIsReady(true)
     // socket.onclose = () => setIsReady(false)

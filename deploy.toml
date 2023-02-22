@@ -16,7 +16,7 @@
 [[production.servers]]
 host = "chicago.tobbe.dev"
 username = "baremetal"
-privateKeyPath = "/Users/tobbe/.ssh/id_rsa_tlundberg"
+privateKeyPath = "/Users/tobbe/.ssh/id_ed25519"
 agentForward = true
 sides = ["api","web"]
 packageManagerCommand = "yarn"

@@ -322,6 +322,10 @@ export function deal(gameId: string, playerId: string) {
   return newCard
 }
 
+/**
+ * Clear all players hands and played cards, and switch dealer (round-robin
+ * style). Finally we shuffle the deck.
+ */
 export function nextRound(gameId: string, playerId: string) {
   const game = games.find((game) => game.id === gameId)
 
@@ -351,6 +355,8 @@ export function nextRound(gameId: string, playerId: string) {
   } else {
     game.players[currentDealerIndex + 1].dealer = true
   }
+
+  game.deck = shuffledDeck()
 
   broadcast(gameId, {
     type: 'PLAYERS',

@@ -83,6 +83,9 @@ const WsContextProvider: React.FC<Props> = ({ children }) => {
     socket.onclose = (e) => {
       console.log('socket close', e)
     }
+    socket.onerror = (e) => {
+      console.log('socket error', e)
+    }
     socket.onmessage = (event) => {
       console.log('onmessage', event.data)
       const data = JSON.parse(event.data)

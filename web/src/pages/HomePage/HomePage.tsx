@@ -119,6 +119,7 @@ const HomePage = () => {
   const [playerId, setPlayerId] = useState('')
 
   const me = game?.players.find((p) => p.id === playerId)
+  const isPlaying = game?.players.some((player) => player.played.length > 0)
 
   console.log('game', game)
   console.log('me', me)
@@ -232,6 +233,7 @@ const HomePage = () => {
                   onClick={() => {
                     discard(createdGameId || gameId, playerId, card)
                   }}
+                  disabled={isPlaying}
                 >
                   Discard
                 </button>
